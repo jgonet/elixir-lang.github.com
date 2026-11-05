@@ -12,6 +12,7 @@
     "lint": "pnpm exec biome check",
     "typecheck": "astro check",
     "test": "playwright test",
+    "test:popcorn": "playwright test --config playwright.popcorn.config.ts",
     "test:coi": "node --test tests/coi-serviceworker.mjs",
     "test:smoke": "playwright test tests/smoke.spec.ts",
     "test:visual": "playwright test tests/visual.spec.ts",

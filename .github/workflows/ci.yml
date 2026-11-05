@@ -44,5 +44,12 @@ jobs:
       - name: Check
         run: |
           pnpm lint
+          pnpm test:coi
           pnpm typecheck
           pnpm build
+
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Test homepage examples on a static server
+        run: pnpm test:popcorn
