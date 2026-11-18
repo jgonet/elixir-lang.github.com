@@ -178,9 +178,13 @@ and its local destination.
 
 ## Deployment
 
-GitHub Pages builds the site through `.github/workflows/deploy.yml`. The
-workflow builds the canonical `https://elixir-lang.org` site and deploys the
-generated `dist` directory.
+Netlify builds the `deploy` branch with `./deploy.sh` and publishes `dist/`.
+The script uses mise to install the pinned Elixir/OTP toolchain and fetch
+evaluator dependencies before building Astro. Install pnpm dependencies
+with `pnpm install --frozen-lockfile` before running it locally. Netlify
+installs them automatically.
+
+The GitHub Pages workflow remains available in `.github/workflows/deploy.yml`.
 
 Publish the whole `dist/` tree, including Popcorn's generated runtime assets.
 The runtime requires cross-origin isolation. On GitHub Pages, the first Run

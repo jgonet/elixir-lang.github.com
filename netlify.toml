@@ -1,0 +1,6 @@
+[build]
+  command = "./deploy.sh"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
