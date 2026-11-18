@@ -14,8 +14,7 @@ export default defineConfig({
   webServer: process.env.BASE_URL
     ? undefined
     : {
-        command:
-          "python3 -m http.server 4322 --bind 127.0.0.1 --directory dist",
+        command: "python3 tests/serve.py",
         url: baseURL,
         reuseExistingServer: !process.env.CI,
       },

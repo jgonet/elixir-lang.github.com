@@ -25,11 +25,22 @@ test.describe("examples", () => {
     expect(requests).toHaveLength(0);
     await expect(editor.popcornLogo).not.toBeVisible();
 
+    const navigations = gatherRequests(
+      page,
+      (request) =>
+        request.isNavigationRequest() && request.frame() === page.mainFrame(),
+    );
     await editor.code.press("Meta+Enter");
     await expect(editor.result).toHaveText("{:pixels, 43}");
     await expect(editor.code).toHaveValue(source);
     await expect(editor.display).toHaveText(source);
     await expect(editor.popcornLogo).toBeVisible();
+    expect(navigations).toHaveLength(0);
+    const registrations = await page.evaluate(async () => {
+      const workers = await navigator.serviceWorker.getRegistrations();
+      return workers.length;
+    });
+    expect(registrations).toBe(0);
 
     await editor.next.click();
     await editor.previous.click();
@@ -83,11 +94,13 @@ test.describe("examples", () => {
 
     await editor.run.click();
     await expect(editor.alert).toHaveText("Elixir could not start.");
-    expect(navigations).toHaveLength(2);
+    expect(navigations).toHaveLength(1);
   });
 
   test("startup retry", async ({ page }) => {
-    await failFirstRegistration(page);
+    await page.context().route("**/worker-*.js", (route) => route.abort(), {
+      times: 1,
+    });
     await page.goto("/");
     const editor = nodes(page);
 
@@ -204,16 +217,4 @@ async function delayRuntime(context: BrowserContext) {
     await route.continue();
   });
   return release;
-}
-
-async function failFirstRegistration(page: Page) {
-  await page.addInitScript(() => {
-    const register = navigator.serviceWorker.register.bind(
-      navigator.serviceWorker,
-    );
-    navigator.serviceWorker.register = () => {
-      navigator.serviceWorker.register = register;
-      return Promise.reject(new Error("Registration failed"));
-    };
-  });
 }

@@ -2,7 +2,6 @@ import type { Popcorn, PopcornOpts } from "@swmansion/popcorn";
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { assert } from "@/utilities/assert";
 import { EXAMPLES } from "./hero-examples";
-import { ensureIsolation } from "./popcorn-isolation";
 
 const ERROR_MESSAGES = {
   startup: "Elixir could not start.",
@@ -56,47 +55,40 @@ export function useExampleRuntime() {
     controller.current = null;
   }, [clear]);
 
-  const start = useCallback(
-    async (serializedResumeState: string, resumed = false) => {
-      dispose();
-      dispatch({ type: "start" });
-      const attempt = createPopcornController({
-        onStdout: appendOutput,
-        onStderr: appendOutput,
-        onError(cause) {
-          clear();
-          console.error("Popcorn runtime stopped:", cause);
-          dispatch({ type: "fail" });
-        },
-      });
-      controller.current = attempt;
-
-      function appendOutput(text: string) {
-        if (!attempt.signal.aborted) append(text);
-      }
-
-      try {
-        const isolation = await ensureIsolation(
-          serializedResumeState,
-          resumed,
-          attempt.signal,
-        );
-        attempt.signal.throwIfAborted();
-        if (isolation === "reloading") return null;
-        const runtime = await attempt.boot();
-        attempt.signal.throwIfAborted();
-        dispatch({ type: "booted", runtime });
-        return runtime;
-      } catch (cause) {
-        if (attempt.signal.aborted) return null;
-        dispose();
-        console.error("Popcorn startup failed:", cause);
+  const start = useCallback(async () => {
+    dispose();
+    dispatch({ type: "start" });
+    const attempt = createPopcornController({
+      onStdout: appendOutput,
+      onStderr: appendOutput,
+      onError(cause) {
+        clear();
+        console.error("Popcorn runtime stopped:", cause);
         dispatch({ type: "fail" });
-        return null;
+      },
+    });
+    controller.current = attempt;
+
+    function appendOutput(text: string) {
+      if (!attempt.signal.aborted) append(text);
+    }
+
+    try {
+      if (crossOriginIsolated !== true) {
+        throw new Error("The Elixir runtime requires cross-origin isolation.");
       }
-    },
-    [dispose, append, clear],
-  );
+      const runtime = await attempt.boot();
+      attempt.signal.throwIfAborted();
+      dispatch({ type: "booted", runtime });
+      return runtime;
+    } catch (cause) {
+      if (attempt.signal.aborted) return null;
+      dispose();
+      console.error("Popcorn startup failed:", cause);
+      dispatch({ type: "fail" });
+      return null;
+    }
+  }, [dispose, append, clear]);
 
   const run = useCallback(
     async (runtime: Popcorn, idx: number, source: string) => {

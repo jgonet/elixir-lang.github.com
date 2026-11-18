@@ -61,7 +61,7 @@ elixir-website/
 ├── package.json
 ├── AGENTS.md                  # conventions for AI assistants
 ├── popcorn/                   # evaluator, locked dependencies and toolchain
-├── public/                    # favicon, OG fallback, robots.txt, isolation worker
+├── public/                    # favicon, OG fallback, robots.txt
 ├── scripts/                   # Deployment and SVG optimization utilities
 ├── src/
 │   ├── assets/                # fonts, icons, logos, images
@@ -187,11 +187,11 @@ installs them automatically.
 The GitHub Pages workflow remains available in `.github/workflows/deploy.yml`.
 
 Publish the whole `dist/` tree, including Popcorn's generated runtime assets.
-The runtime requires cross-origin isolation. On GitHub Pages, the first Run
-registers `public/coi-serviceworker.js` and reloads once, preserving edits and
-the requested execution. The worker persists across visits and requires
-HTTPS (or localhost). Hosts that set `Cross-Origin-Opener-Policy: same-origin`
-and `Cross-Origin-Embedder-Policy: require-corp` need no worker or reload.
+The runtime requires cross-origin isolation. `netlify.toml` sets
+`Cross-Origin-Opener-Policy: same-origin` and
+`Cross-Origin-Embedder-Policy: require-corp` for pages and runtime workers.
+Other hosts must set these headers as well. Examples start without a reload;
+no isolation service worker is registered.
 
 Preview builds emit `noindex, nofollow`. Set `PROD=true` only in the official
 deployment workflow to allow search engines to index the site.
